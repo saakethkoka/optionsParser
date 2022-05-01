@@ -50,16 +50,19 @@ def parse_text(text, ticker=None):
     word_list = text.split()
     option_details = {
         "flag": None,
-        "ticker": None, # Ticker of the underlying (capitalized)
-        "expiry": None, # Expiry date of the option
-        "strike": None, # Strike price of the option
+        "ticker": None,  # Ticker of the underlying (capitalized)
+        "expiry": None,  # Expiry date of the option
+        "strike": None,  # Strike price of the option
     }
 
     for i in range(len(word_list)):
         # Looking for a ticker first:
         if word_list[i][0] == '$':
             if word_list[i][1].isalpha():
-                option_details['ticker'] = word_list[i][1:].upper()
+                ticker = word_list[i][1:].upper()
+                if not ticker[-1].isalpha():
+                    ticker = ticker[:-1]
+                option_details['ticker'] = ticker
                 # When a ticker is found:
                 while i < len(word_list)-1:
                     i += 1
@@ -103,7 +106,7 @@ for i in range(len(data)):
     option = parse_text(data["Text"][i])
 
     if(option["ticker"] is None or option["expiry"] is None or option["strike"] is None or option["flag"] is None):
-        unfinished_entries += 1
+        print(option)
         continue
 
     if(data["Flag"][i] == option["flag"]
