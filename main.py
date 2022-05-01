@@ -67,9 +67,9 @@ def parse_text(text, ticker=None):
                 while i < len(word_list)-1:
                     i += 1
                     # Looking for a flag:
-                    if word_list[i].upper() == 'PUT' or word_list[i].upper() == 'PUTS' or word_list[i].upper() == 'P':
+                    if (word_list[i].upper() == 'PUT' or word_list[i].upper() == 'PUTS' or word_list[i].upper() == 'P') and option_details['flag'] is None:
                         option_details['flag'] = 'P'
-                    elif word_list[i].upper() == 'CALL' or word_list[i].upper() == 'CALLS' or word_list[i].upper() == 'C':
+                    elif (word_list[i].upper() == 'CALL' or word_list[i].upper() == 'CALLS' or word_list[i].upper() == 'C') and option_details['flag'] is None:
                         option_details['flag'] = 'C'
                     # Looking for a strike price (given that one has not been found yet):
                     # The strike price typically comes soon after the ticker
@@ -106,7 +106,6 @@ for i in range(len(data)):
     option = parse_text(data["Text"][i])
 
     if(option["ticker"] is None or option["expiry"] is None or option["strike"] is None or option["flag"] is None):
-        print(option)
         continue
 
     if(data["Flag"][i] == option["flag"]
@@ -116,16 +115,9 @@ for i in range(len(data)):
         correct_entries += 1
     else:
         print("Incorrect entry:")
-        print("Expected:")
-        print("Flag:", data["Flag"][i])
-        print("Ticker:", data["Ticker"][i])
-        print("Expiry:", data["Expiry"][i])
-        print("Strike:", data["Strike"][i])
-        print("Got:")
-        print("Flag:", option["flag"])
-        print("Ticker:", option["ticker"])
-        print("Expiry:", option["expiry"])
-        print("Strike:", option["strike"])
+        print(data.iloc[i])
+        print(option)
+        print("-----------------------------------------------------")
 
 
 accuracy = correct_entries*100 / total_entries
