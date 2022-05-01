@@ -88,17 +88,6 @@ def parse_text(text, ticker=None):
                                 year = 2022  # TODO: better way to find year but should be fine for now
                                 option_details["expiry"] = dt.date(year, month, day)
 
-
-
-
-
-    # option_details = {
-    #     "flag": "C", # C for call, P for put
-    #     "ticker": "BBIG", # Ticker of the underlying (capitalized)
-    #     "expiry": dt.date(2022, 5, 6), # Expiry date of the option
-    #     "strike": 3, # Strike price of the option
-    # }
-
     return option_details
 
 
@@ -108,19 +97,36 @@ data.Expiry = pd.to_datetime(data.Expiry).dt.date
 
 total_entries = len(data)
 correct_entries = 0
+unfinished_entries = 0
 
 for i in range(len(data)):
     option = parse_text(data["Text"][i])
-    print(option)
+
+    if(option["ticker"] is None or option["expiry"] is None or option["strike"] is None or option["flag"] is None):
+        unfinished_entries += 1
+        continue
 
     if(data["Flag"][i] == option["flag"]
             and data["Ticker"][i] == option["ticker"]
             and data["Expiry"][i] == option["expiry"]
             and data["Strike"][i] == option["strike"]):
         correct_entries += 1
+    else:
+        print("Incorrect entry:")
+        print("Expected:")
+        print("Flag:", data["Flag"][i])
+        print("Ticker:", data["Ticker"][i])
+        print("Expiry:", data["Expiry"][i])
+        print("Strike:", data["Strike"][i])
+        print("Got:")
+        print("Flag:", option["flag"])
+        print("Ticker:", option["ticker"])
+        print("Expiry:", option["expiry"])
+        print("Strike:", option["strike"])
 
 
 accuracy = correct_entries*100 / total_entries
 accuracy = round(accuracy, 2)
 
 print("Accuracy: {}%".format(accuracy))
+print("Unfinished entries: {}".format(unfinished_entries))
