@@ -2,6 +2,14 @@ import pandas as pd
 import re
 import datetime as dt
 
+MONTHS_DICT = {
+    "JANUARY": 1, "FEBRUARY": 2, "MARCH": 3, "APRIL": 4, "MAY": 5, "JUNE": 6, "JULY": 7, "AUGUST": 8, "SEPTEMBER": 9,
+    "OCTOBER": 10, "NOVEMBER": 11, "DECEMBER": 12, "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "JUN": 6, "JUL": 7, "AUG": 8,
+    "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12
+}
+
+
+
 
 def remove_emojis(text):
     emoj = re.compile("["
@@ -39,14 +47,57 @@ def clean_text(text):
 def parse_text(text, ticker=None):
     text = clean_text(text)
     # TODO: Add logic to create an option_details dictionary formatted like the one bellow:
-
-
+    word_list = text.split()
     option_details = {
-        "flag": "C", # C for call, P for put
-        "ticker": "BBIG", # Ticker of the underlying (capitalized)
-        "expiry": dt.date(2022, 5, 6), # Expiry date of the option
-        "strike": 3, # Strike price of the option
+        "flag": None,
+        "ticker": None, # Ticker of the underlying (capitalized)
+        "expiry": None, # Expiry date of the option
+        "strike": None, # Strike price of the option
     }
+
+    for i in range(len(word_list)):
+        # Looking for a ticker first:
+        if word_list[i][0] == '$':
+            if word_list[i][1].isalpha():
+                option_details['ticker'] = word_list[i][1:].upper()
+                # When a ticker is found:
+                while i < len(word_list)-1:
+                    i += 1
+                    # Looking for a flag:
+                    if word_list[i].upper() == 'PUT' or word_list[i].upper() == 'PUTS' or word_list[i].upper() == 'P':
+                        option_details['flag'] = 'P'
+                    elif word_list[i].upper() == 'CALL' or word_list[i].upper() == 'CALLS' or word_list[i].upper() == 'C':
+                        option_details['flag'] = 'C'
+                    # Looking for a strike price (given that one has not been found yet):
+                    # The strike price typically comes soon after the ticker
+                    elif word_list[i][0] == '$' and option_details["strike"] is None:
+                        option_details["strike"] = float(word_list[i][1:])
+                    # Looking for an expiry date:
+                    elif option_details["expiry"] is None:
+                        # The expiry date typically comes soon after the ticker
+                        if word_list[i][:3].upper() == "EXP":
+                            if "/" in word_list[i+1]:
+                                dates = word_list[i+1].split("/")
+                                month = int(dates[0])
+                                day = int(dates[1])
+                                year = 2022  # TODO: better way to find year but should be fine for now
+                                option_details["expiry"] = dt.date(year, month, day)
+                            elif word_list[i+1] in MONTHS_DICT and word_list[i+2].isnumeric():
+                                month = MONTHS_DICT[word_list[i+1]]
+                                day = int(word_list[i+2])
+                                year = 2022  # TODO: better way to find year but should be fine for now
+                                option_details["expiry"] = dt.date(year, month, day)
+
+
+
+
+
+    # option_details = {
+    #     "flag": "C", # C for call, P for put
+    #     "ticker": "BBIG", # Ticker of the underlying (capitalized)
+    #     "expiry": dt.date(2022, 5, 6), # Expiry date of the option
+    #     "strike": 3, # Strike price of the option
+    # }
 
     return option_details
 
@@ -60,6 +111,7 @@ correct_entries = 0
 
 for i in range(len(data)):
     option = parse_text(data["Text"][i])
+    print(option)
 
     if(data["Flag"][i] == option["flag"]
             and data["Ticker"][i] == option["ticker"]
